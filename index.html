@@ -1,1 +1,187 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07101d"><title>設定マニュアル</title><link rel="stylesheet" href="styles.css"></head><body><header><div><small>SETTING MANUAL</small><h1>設定マニュアル</h1></div><button id="toc" aria-label="目次">☰</button></header><main><section class="search"><div class="searchbar"><span>🔎</span><input id="q" type="search" placeholder="FAX、SCAN、IPアドレスなど"><button id="clear" aria-label="消去">×</button></div><div id="chips"></div></section><section id="listbox"><div class="head"><b id="heading">目次</b><span id="count"></span></div><div id="results"></div></section><section id="viewer" class="hidden"><div class="vhead"><button id="back">← 一覧</button><b id="title"></b><span id="num"></span></div><div id="pageViewport"><img id="pageImage" alt="マニュアルページ"></div><div class="nav"><button id="prev">← 前へ</button><button id="home">⌂ 目次</button><button id="next">次へ →</button></div></section></main><script src="search-data.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07101d">
+<title>設定マニュアル</title>
+<style>
+:root{--bg:#07101d;--card:#0d1928;--line:#26364a;--blue:#2675e8;--muted:#91a5bc}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;max-width:100%;overflow-x:hidden;background:var(--bg);color:#edf4fc;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+button,input{font:inherit}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;width:100%;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:rgba(7,16,29,.96);border-bottom:1px solid var(--line)}
+header small{display:block;color:#6ca8ff;font-size:9px;letter-spacing:.18em}
+h1{margin:2px 0 0;font-size:19px}
+header button{border:0;background:transparent;color:#fff;font-size:25px;padding:8px}
+main{width:100%;max-width:760px;margin:0 auto;padding:8px;overflow-x:hidden}
+.search,.box{width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.search{position:sticky;top:67px;z-index:15;padding:9px}
+.searchbar{display:flex;align-items:center;width:100%;gap:7px;padding:0 9px;border:1px solid #344a66;border-radius:11px;background:#07101d}
+.searchbar input{display:block;flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:16px;padding:12px 0}
+.searchbar input::placeholder{color:#71849b}
+#clear{border:0;background:transparent;color:#fff;font-size:23px;padding:4px 2px}
+#chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}
+.chip{border:1px solid #344a66;background:#0b1725;color:#bdd0e6;border-radius:999px;padding:6px 10px;font-size:12px}
+.chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.head,.vhead{display:flex;align-items:center;gap:7px;padding:10px 11px;border-bottom:1px solid var(--line)}
+.head span,.vhead span{margin-left:auto;color:#8da0b7;font-size:12px;flex:0 0 auto}
+#results{width:100%}
+.item{display:block;width:100%;border:0;border-bottom:1px solid #1e2c3d;background:transparent;color:#fff;text-align:left;padding:12px 11px}
+.item:last-child{border-bottom:0}
+.item .top{display:flex;align-items:center;gap:7px;min-width:0}
+.badge{flex:0 0 auto;font-size:10px;border:1px solid #2b6099;color:#86baff;border-radius:999px;padding:3px 6px}
+.ptitle{flex:1;min-width:0;font-weight:700;white-space:normal;overflow-wrap:anywhere}
+.pg{flex:0 0 auto;color:#788ba3;font-size:11px}
+.desc{display:block;color:var(--muted);font-size:12px;line-height:1.5;margin-top:5px;white-space:normal;overflow-wrap:anywhere}
+.hidden{display:none!important}
+.vhead{position:sticky;top:67px;z-index:12;background:var(--card)}
+#back{border:0;background:transparent;color:#fff;font-size:13px;padding:8px 4px;flex:0 0 auto}
+.vhead b{flex:1;min-width:0;font-size:13px;white-space:normal;overflow-wrap:anywhere}
+/* One source image contains 3 vertical pages. We display it at natural width and
+   move only the selected third into a viewport with the REAL page ratio 910x1287. */
+#pageViewport{position:relative;width:100%;aspect-ratio:910/1287;background:#fff;overflow:hidden}
+#pageImage{position:absolute;left:0;top:0;width:100%;height:auto;max-width:100%;display:block;user-select:none;-webkit-user-drag:none}
+.nav{position:sticky;bottom:0;z-index:12;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;width:100%;padding:9px;background:rgba(13,25,40,.97);border-top:1px solid var(--line)}
+.nav button{min-width:0;border:1px solid #344a66;border-radius:10px;background:#101f31;color:#fff;padding:11px 4px;font-size:13px}
+.nav button:disabled{opacity:.3}
+@media(min-width:600px){main{padding:12px} .search{top:72px} .vhead{top:72px}}
+</style>
+</head>
+<body>
+<header>
+  <div><small>SETTING MANUAL</small><h1>設定マニュアル</h1></div>
+  <button id="toc" type="button" aria-label="目次">☰</button>
+</header>
+
+<main>
+  <section class="search">
+    <div class="searchbar">
+      <span aria-hidden="true">🔎</span>
+      <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="none"
+             placeholder="FAX、SCAN、IPアドレスなど">
+      <button id="clear" type="button" aria-label="消去">×</button>
+    </div>
+    <div id="chips"></div>
+  </section>
+
+  <section id="listbox" class="box">
+    <div class="head"><b id="heading">目次</b><span id="count"></span></div>
+    <div id="results"></div>
+  </section>
+
+  <section id="viewer" class="box hidden">
+    <div class="vhead">
+      <button id="back" type="button">← 一覧</button>
+      <b id="title"></b>
+      <span id="num"></span>
+    </div>
+    <div id="pageViewport"><img id="pageImage" alt="マニュアルページ"></div>
+    <div class="nav">
+      <button id="prev" type="button">← 前へ</button>
+      <button id="home" type="button">⌂ 目次</button>
+      <button id="next" type="button">次へ →</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const P = [{"page":1,"category":"FAX","title":"ページ 1","text":"FAX設定","strip":"strip-001-003.webp","indexInStrip":0,"stripCount":3},{"page":2,"category":"FAX","title":"発信元登録","text":"<FAX> 発信元登録 ホーム→管理者設定","strip":"strip-001-003.webp","indexInStrip":1,"stripCount":3},{"page":3,"category":"FAX","title":"発信元登録","text":"<FAX> 発信元登録 Fax番号入力 選択し編集 基本はoﬀ→相手に発信元名は印字されない","strip":"strip-001-003.webp","indexInStrip":2,"stripCount":3},{"page":4,"category":"FAX","title":"発信元切替ボタン作成","text":"<FAX> 発信元切替ボタン作成 ホーム→管理者設定 複数の発信元を使用している場合の切替の簡略化に使用","strip":"strip-004-006.webp","indexInStrip":0,"stripCount":3},{"page":5,"category":"FAX","title":"発信元切替ボタン作成","text":"<FAX> 発信元切替ボタン作成","strip":"strip-004-006.webp","indexInStrip":1,"stripCount":3},{"page":6,"category":"FAX","title":"発信元切替ボタン作成","text":"<FAX> 発信元切替ボタン作成","strip":"strip-004-006.webp","indexInStrip":2,"stripCount":3},{"page":7,"category":"FAX","title":"発信元切替ボタン作成","text":"<FAX> 発信元切替ボタン作成 FAX/スキャンの画面 FAXの画面 番号を選択して表示 させたい項目を編集 FAXの画面","strip":"strip-007-009.webp","indexInStrip":0,"stripCount":3},{"page":8,"category":"FAX","title":"発信元切替ボタン作成","text":"<FAX> 発信元切替ボタン作成 FAX/スキャンの画面 番号を選択して表示 させたい項目を編集 トップに配置される","strip":"strip-007-009.webp","indexInStrip":1,"stripCount":3},{"page":9,"category":"FAX","title":"ナンバーディスプレイ","text":"<FAX> ナンバーディスプレイ ホーム→管理者設定","strip":"strip-007-009.webp","indexInStrip":2,"stripCount":3},{"page":10,"category":"FAX","title":"ナンバーディスプレイ","text":"<FAX> ナンバーディスプレイ ホーム→管理者設定 ナンバーディスプレイはonにする。","strip":"strip-010-012.webp","indexInStrip":0,"stripCount":3},{"page":11,"category":"FAX","title":"FAX転送","text":"<FAX> FAX転送 ホーム→管理者設定 あらかじめ転送先を宛先登録しておく。","strip":"strip-010-012.webp","indexInStrip":1,"stripCount":3},{"page":12,"category":"FAX","title":"FAX転送","text":"<FAX> FAX転送","strip":"strip-010-012.webp","indexInStrip":2,"stripCount":3},{"page":13,"category":"FAX","title":"FAX転送","text":"<FAX> FAX転送 転送と紙出力をするか確認して設定する。 あらかじめ作成しておいた転送先を選ぶ 複数の宛先に送るにはあらかじめグループ登録しておく。 &","strip":"strip-013-015.webp","indexInStrip":0,"stripCount":3},{"page":14,"category":"FAX","title":"強制メモリ受信","text":"<FAX> 強制メモリ受信 ホーム→管理者設定","strip":"strip-013-015.webp","indexInStrip":1,"stripCount":3},{"page":15,"category":"FAX","title":"強制メモリ受信","text":"<FAX> 強制メモリ受信 こちらを選べばパスワードなし","strip":"strip-013-015.webp","indexInStrip":2,"stripCount":3},{"page":16,"category":"FAX","title":"強制メモリ受信","text":"<FAX> 強制メモリ受信 選択し編集 強制メモリ受信をonにしてパスワードを入力 前ページの設定なら不要","strip":"strip-016-018.webp","indexInStrip":0,"stripCount":3},{"page":17,"category":"FAX","title":"強制メモリ受信","text":"<FAX> 強制メモリ受信 ホーム→管理者設定 トップメニューに強制メモリ受信ボックスを表示させる。","strip":"strip-016-018.webp","indexInStrip":1,"stripCount":3},{"page":18,"category":"FAX","title":"強制メモリ受信","text":"<FAX> 強制メモリ受信","strip":"strip-016-018.webp","indexInStrip":2,"stripCount":3},{"page":19,"category":"SCAN","title":"ページ 19","text":"SCAN設定","strip":"strip-019-021.webp","indexInStrip":0,"stripCount":3},{"page":20,"category":"SCAN","title":"ユーザーアカウント作成","text":"<SCAN> ユーザーアカウント作成 SMB用のユーザーアカウントを作成する コントロールパネル","strip":"strip-019-021.webp","indexInStrip":1,"stripCount":3},{"page":21,"category":"SCAN","title":"ユーザーアカウント作成","text":"<SCAN> ユーザーアカウント作成","strip":"strip-019-021.webp","indexInStrip":2,"stripCount":3},{"page":22,"category":"SCAN","title":"ユーザーアカウント作成","text":"<SCAN> ユーザーアカウント作成","strip":"strip-022-024.webp","indexInStrip":0,"stripCount":3},{"page":23,"category":"SCAN","title":"ユーザーアカウント作成","text":"<SCAN> ユーザーアカウント作成","strip":"strip-022-024.webp","indexInStrip":1,"stripCount":3},{"page":24,"category":"SCAN","title":"ユーザーアカウント作成","text":"<SCAN> ユーザーアカウント作成 全ての項目に大文字で『SCAN』と入力する。","strip":"strip-022-024.webp","indexInStrip":2,"stripCount":3},{"page":25,"category":"SCAN","title":"共有フォルダ作成","text":"<SCAN> 共有フォルダ作成 SCANフォルダを作成する。 作成したフォルダを右クリック→プロパティ デスクトップ上の何もないところで右クリック","strip":"strip-025-027.webp","indexInStrip":0,"stripCount":3},{"page":26,"category":"SCAN","title":"共有フォルダ作成","text":"<SCAN> 共有フォルダ作成 EveryoneまたはSCAN(作成したユーザーアカウント) 読み取り→読み取り/書き込みに変更","strip":"strip-025-027.webp","indexInStrip":1,"stripCount":3},{"page":27,"category":"SCAN","title":"ネットワークプロファイル変更","text":"<SCAN> ネットワークプロファイル変更","strip":"strip-025-027.webp","indexInStrip":2,"stripCount":3},{"page":28,"category":"SCAN","title":"ネットワークプロファイル変更","text":"<SCAN> ネットワークプロファイル変更","strip":"strip-028-030.webp","indexInStrip":0,"stripCount":3},{"page":29,"category":"SCAN","title":"ネットワーク詳細設定","text":"<SCAN> ネットワーク詳細設定 コントロールパネル","strip":"strip-028-030.webp","indexInStrip":1,"stripCount":3},{"page":30,"category":"SCAN","title":"ネットワーク詳細設定","text":"<SCAN> ネットワーク詳細設定","strip":"strip-028-030.webp","indexInStrip":2,"stripCount":3},{"page":31,"category":"SCAN","title":"SMB1.0有効化","text":"<SCAN> SMB1.0有効化 コントロールパネル","strip":"strip-031-033.webp","indexInStrip":0,"stripCount":3},{"page":32,"category":"SCAN","title":"SMB1.0有効化","text":"<SCAN> SMB1.0有効化 上2つのみにチェックを入れる。 必ず再起動が必要なので、あらかじめ顧客の了承を得ておく。 ~","strip":"strip-031-033.webp","indexInStrip":1,"stripCount":3},{"page":33,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN ①保存するboxを作成する","strip":"strip-031-033.webp","indexInStrip":2,"stripCount":3},{"page":34,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-034-036.webp","indexInStrip":0,"stripCount":3},{"page":35,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN 必要に応じてボックスパス ワードを設定する。 検索文字を入力 ボックス内ドキュメント削 除時間→定期的に削除する SMBフォルダーへの文書自動 登録をonにする。 ボックス名を入力","strip":"strip-034-036.webp","indexInStrip":1,"stripCount":3},{"page":36,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN ※SMBフォルダーへの文書自動登録の項目が表示されない場合 ホーム→管理者設定","strip":"strip-034-036.webp","indexInStrip":2,"stripCount":3},{"page":37,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-037-039.webp","indexInStrip":0,"stripCount":3},{"page":38,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN ②ショートカット作成","strip":"strip-037-039.webp","indexInStrip":1,"stripCount":3},{"page":39,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-037-039.webp","indexInStrip":2,"stripCount":3},{"page":40,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-040-042.webp","indexInStrip":0,"stripCount":3},{"page":41,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN ③本体にscan宛先を登録する","strip":"strip-040-042.webp","indexInStrip":1,"stripCount":3},{"page":42,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-040-042.webp","indexInStrip":2,"stripCount":3},{"page":43,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-043-045.webp","indexInStrip":0,"stripCount":3},{"page":44,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN","strip":"strip-043-045.webp","indexInStrip":1,"stripCount":3},{"page":45,"category":"SCAN","title":"Box SCAN","text":"<SCAN> Box SCAN ※パソコンから複合機へのショートカットを作成した際に 資格情報を求められる場合 ①複合機側で対処用BOX作成する ・BOX名は任意(TESTなど)、パスワードを設定 ・フォルダの共有を有効 ②資格情報入力 ・ユーザー名はBOX No.(0は省いてOK) ・パスワードは①で設定したもの","strip":"strip-043-045.webp","indexInStrip":2,"stripCount":3},{"page":46,"category":"各種設定","title":"ページ 46","text":"各種設定","strip":"strip-046-048.webp","indexInStrip":0,"stripCount":3},{"page":47,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 ホーム→管理者設定","strip":"strip-046-048.webp","indexInStrip":1,"stripCount":3},{"page":48,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 複合機に割り当てるIPアドレス 基本的にこの値 基本的にはルーターのIPアドレス ↑ - ↓","strip":"strip-046-048.webp","indexInStrip":2,"stripCount":3},{"page":49,"category":"各種設定","title":"コマンドプロンプト","text":"<設定> コマンドプロンプト 方法① 方法② 検索窓に上記の通り入力 スタートメニューから上記の場所 ※現在のネットワークのセグメント、デフォルト ゲートウェイを確認し、複合機に割り当てるIPア ドレスを決める","strip":"strip-049-051.webp","indexInStrip":0,"stripCount":3},{"page":50,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 基本画面 ipconﬁg 端末のIPアドレスやデフォルトゲートウェイを確認する コマンド入力後、エンターキー","strip":"strip-049-051.webp","indexInStrip":1,"stripCount":3},{"page":51,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 IPv4アドレス→端末のIPアドレス デフォルトゲートウェイ→ルーターのIPアドレス","strip":"strip-049-051.webp","indexInStrip":2,"stripCount":3},{"page":52,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 基本画面 ping 対象のIPアドレスに到達できるかを確認するコマンド ping コマンドとアドレスの間にス ペース→エンターキー 複合機に割り当てるIPアドレスが 未使用であるか確認する 接続できる=使用されているIPアドレス *","strip":"strip-052-054.webp","indexInStrip":0,"stripCount":3},{"page":53,"category":"各種設定","title":"IPアドレス設定","text":"<設定> IPアドレス設定 ipconﬁgコマンドでネットワークのセグメントを確認 し、pingコマンドで複合機に割り当てるIPアドレスが未 使用であるか確認する。 接続できない=使用されていないIPアドレス","strip":"strip-052-054.webp","indexInStrip":1,"stripCount":3},{"page":54,"category":"各種設定","title":"インポート/エクスポート","text":"<設定> インポート/エクスポート ホーム→管理者設定 ※プログラム登録があれば写真を撮っておく。(エクスポートされない。)","strip":"strip-052-054.webp","indexInStrip":2,"stripCount":3},{"page":55,"category":"各種設定","title":"この五項目にチェックを入れok→次画面","text":"<設定> この五項目にチェックを入れok→次画面 でパスワードを入力 インポート/エクスポート","strip":"strip-055-057.webp","indexInStrip":0,"stripCount":3},{"page":56,"category":"各種設定","title":"インポート/エクスポート","text":"<設定> インポート/エクスポート エクスポート時に決めたパスワードを入力しok","strip":"strip-055-057.webp","indexInStrip":1,"stripCount":3},{"page":57,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 ホーム→管理者設定 複合機にメールアドレス登録","strip":"strip-055-057.webp","indexInStrip":2,"stripCount":3},{"page":58,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 転送元メールアドレスを入力 転送元メールアドレスを入力 この名称からメールが届く ↳","strip":"strip-058-060.webp","indexInStrip":0,"stripCount":3},{"page":59,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 ホーム→管理者設定 複合機のネットワーク設定","strip":"strip-058-060.webp","indexInStrip":1,"stripCount":3},{"page":60,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 複合機に割り当てるIPアドレス 基本的にこの値 基本的にはルーターのIPアドレス 全て入力する ルーターのIPアドレス ↑ - ↓","strip":"strip-058-060.webp","indexInStrip":2,"stripCount":3},{"page":61,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 ホーム→管理者設定 複合機のemail設定","strip":"strip-061-063.webp","indexInStrip":0,"stripCount":3},{"page":62,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 送信のみ、受信は不要。 Email送信設定をon","strip":"strip-061-063.webp","indexInStrip":1,"stripCount":3},{"page":63,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 SMTPサーバーアドレスとポート番号を 入力する。Gmailの場合はこのまま。 TLS→587 SSL→465 顧客のメールアドレスを使う場合は使用中のメールソフトで確認できる。","strip":"strip-061-063.webp","indexInStrip":2,"stripCount":3},{"page":64,"category":"各種設定","title":"メール設定","text":"<設定> メール設定","strip":"strip-064-066.webp","indexInStrip":0,"stripCount":3},{"page":65,"category":"各種設定","title":"メール設定","text":"<設定> メール設定 取得済みの転送用メールアドレス メールパスワード SMTPサーバー情報","strip":"strip-064-066.webp","indexInStrip":1,"stripCount":3},{"page":66,"category":"各種設定","title":"登録キー設定","text":"<設定> 登録キー設定 ホーム→管理者設定","strip":"strip-064-066.webp","indexInStrip":2,"stripCount":3},{"page":67,"category":"各種設定","title":"登録キー設定","text":"<設定> 登録キー設定 1～5まで設定する。","strip":"strip-067-069.webp","indexInStrip":0,"stripCount":3},{"page":68,"category":"各種設定","title":"宛先種類設定","text":"<設定> 宛先種類設定 ホーム→ユーティリティ","strip":"strip-067-069.webp","indexInStrip":1,"stripCount":3},{"page":69,"category":"各種設定","title":"宛先種類設定","text":"<設定> 宛先種類設定","strip":"strip-067-069.webp","indexInStrip":2,"stripCount":3},{"page":70,"category":"各種設定","title":"簡易IPフィルタリング","text":"<設定> 簡易IPフィルタリング ホーム→管理者設定","strip":"strip-070-072.webp","indexInStrip":0,"stripCount":3},{"page":71,"category":"各種設定","title":"簡易IPフィルタリング","text":"<設定> 簡易IPフィルタリング フィルタリングなしを選択","strip":"strip-070-072.webp","indexInStrip":1,"stripCount":3},{"page":72,"category":"各種設定","title":"AirPrint設定","text":"<設定> AirPrint設定 ホーム→管理者設定","strip":"strip-070-072.webp","indexInStrip":2,"stripCount":3},{"page":73,"category":"各種設定","title":"AirPrint設定","text":"<設定> AirPrint設定 最新バージョンの場合、SSL通信のみ→SSL/非SSL通信を許可に変更する。 この辺りに表示される -","strip":"strip-073-075.webp","indexInStrip":0,"stripCount":3},{"page":74,"category":"各種設定","title":"無線ネットワーク設定","text":"<設定> 無線ネットワーク設定 サービスモード ストップ→0→0→ストップ→0→1","strip":"strip-073-075.webp","indexInStrip":1,"stripCount":3},{"page":75,"category":"各種設定","title":"無線ネットワーク設定","text":"<設定> 無線ネットワーク設定","strip":"strip-073-075.webp","indexInStrip":2,"stripCount":3},{"page":76,"category":"各種設定","title":"無線ネットワーク設定","text":"<設定> 無線ネットワーク設定 既存のwiﬁ環境に無線で接続 有線+無線ネットワーク(別セグメ ント)。既存のwiﬁに接続→ゲスト にプリンタ使用を許可する場合な ど 有線+無線ネットワーク(別セグメ ント)。複合機のwiﬁに接続→ゲス トにプリンタ使用を許可する場合 など 用途に合わせて選択する IPアドレス ・無線のみ→TCP/IPで設定する一つのみ ・有線＋無線→有線側と無線側でセグメントを別にする (192.168.⚪⚪.◻◻◻の⚪の部分)","strip":"strip-076-078.webp","indexInStrip":0,"stripCount":3},{"page":77,"category":"各種設定","title":"無線ネットワーク設定","text":"<設定> 無線ネットワーク設定 接続イメージ ・有線のみ ルーター 複合機 PC ・無線のみ ルーター 複合機 PC スマホ -i","strip":"strip-076-078.webp","indexInStrip":1,"stripCount":3},{"page":78,"category":"各種設定","title":"無線ネットワーク設定","text":"<設定> 無線ネットワーク設定 接続イメージ ・有線＋無線(子機モード) ルーター 複合機 PC 無線ルーター スマホ PC 192.168.0.1 複合機有線IP 192.168.0.100 192.168.0.2 複合機無線IP 192.168.1.100 192.168.1.1 192.168.1.3 一台の複合機を2系統のネットワークに接続して使用できる SMBscan(ホスト名or IP) Scan to Email 可能 SMBscan(IPのみ) Scan to Email 不可 ・有線＋無線(親機モード) ルーター 複合機 PC スマホ PC 192.168.0.1 複合機有線IP 192.168.0.100 192.168.0.2 複合機無線IP 192.168.1.100 192.168.1.3 有線と無線を別々のローカルエリアネットワークとして設定する SMBscan(ホスト名or IP) Scan to Email 可能 SMBscan(IPのみ) Scan to Email 不可 - - -","strip":"strip-076-078.webp","indexInStrip":2,"stripCount":3},{"page":79,"category":"各種設定","title":"無線子機設定","text":"<設定> 無線子機設定 管理者→ネットワーク→無線ネットワーク設定 SSIDを選択する セキュリティキーを入力する 無線ネットワーク設定 Ok後にAP検索","strip":"strip-079-081.webp","indexInStrip":0,"stripCount":3},{"page":80,"category":"各種設定","title":"有線＋無線として接続する場合","text":"<設定> 有線＋無線として接続する場合 管理者→ネットワーク 有線側のIPアドレスを設定 無線側のIPアドレスを設定 無線ネットワーク設定","strip":"strip-079-081.webp","indexInStrip":1,"stripCount":3},{"page":81,"category":"各種設定","title":"無線親機設定","text":"<設定> 無線親機設定 管理者→ネットワーク 無線ネットワーク設定 任意の文字列 初期値は認証なし 管理者→ネットワーク→無線ネットワーク","strip":"strip-079-081.webp","indexInStrip":2,"stripCount":3},{"page":82,"category":"各種設定","title":"無線親機設定","text":"<設定> 無線親機設定 無線ネットワーク設定 8文字以上 初期値のままでok 管理者→ネットワーク→無線ネットワーク","strip":"strip-082-084.webp","indexInStrip":0,"stripCount":3},{"page":83,"category":"各種設定","title":"無線親機設定","text":"<設定> 無線親機設定 管理者→ネットワーク→TCP/IP設定→TCP/IP設定1 無線ネットワーク設定 管理者→ネットワーク→無線ネットワーク 255.255.255.0 PCやスマホなどの無線デバイスのネット ワーク設定が自動取得の場合、下記の範囲 で振り当たる 無線親機設定で決めた内容に合わせて複合 機のIPアドレスを設定する 例)192.168.1.2 例)192.168.1.50","strip":"strip-082-084.webp","indexInStrip":1,"stripCount":3},{"page":84,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証 ホーム→管理者設定","strip":"strip-082-084.webp","indexInStrip":2,"stripCount":3},{"page":85,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証 ログインあり→パスワードを毎回入力","strip":"strip-085-087.webp","indexInStrip":0,"stripCount":3},{"page":86,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証","strip":"strip-085-087.webp","indexInStrip":1,"stripCount":3},{"page":87,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証","strip":"strip-085-087.webp","indexInStrip":2,"stripCount":3},{"page":88,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証 各項目を設定","strip":"strip-088-090.webp","indexInStrip":0,"stripCount":3},{"page":89,"category":"各種設定","title":"ユーザー認証","text":"<設定> ユーザー認証 各項目を設定 パブリックユーザーの設定 プリンタドライバーの設定も必要","strip":"strip-088-090.webp","indexInStrip":1,"stripCount":3},{"page":90,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 Scanフォルダの作成方法 ユーザー(windowsでのCドライブ)を選択 右クリック→新規フォルダ Finderを選択 ※Macでの右クリック方法 ①トラックパッドに二本指を置いてクリック ②controlを押しながらクリック または - · => -","strip":"strip-088-090.webp","indexInStrip":2,"stripCount":3},{"page":91,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 Finderにユーザーが表示されない場合 チェックを入れると表示される Finderを選択→画面上部のFinderをクリック→ 環境設定をクリック *","strip":"strip-091-093.webp","indexInStrip":0,"stripCount":3},{"page":92,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 作成したフォルダを共有する ①リンゴマークをクリック ②システム環境設定 共有をクリック ·","strip":"strip-091-093.webp","indexInStrip":1,"stripCount":3},{"page":93,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 作成したフォルダを共有する ①ファイル共有にチェック ②+をクリックし共有したいフォルダを追加する ③読み/書きに変更 ④オプションを選択 両方チェックを入れる · - = ·","strip":"strip-091-093.webp","indexInStrip":2,"stripCount":3},{"page":94,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 ユーザーIDの確認方法 ユーザとグループ 鍵マークをクリック リンゴマーク→システム環境設定 -","strip":"strip-094-096.webp","indexInStrip":0,"stripCount":3},{"page":95,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 ユーザーIDの確認方法 お客様にパスワードを確認する ユーザーをcontrolを押しながらクリック 詳細オプション · # => =","strip":"strip-094-096.webp","indexInStrip":1,"stripCount":3},{"page":96,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 ユーザーIDの確認方法 これがユーザーID ユーザーIDを控えて閉じる t > =· =>","strip":"strip-094-096.webp","indexInStrip":2,"stripCount":3},{"page":97,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 ホストアドレスの確認方法 ネットワーク 詳細をクリック リンゴマーク→システム環境設定","strip":"strip-097-099.webp","indexInStrip":0,"stripCount":3},{"page":98,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 ホストアドレスの確認方法 これがホストアドレス ホストアドレスを控えて閉じる > · *","strip":"strip-097-099.webp","indexInStrip":1,"stripCount":3},{"page":99,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 複合機のSMB認証設定 ホーム→管理者設定","strip":"strip-097-099.webp","indexInStrip":2,"stripCount":3},{"page":100,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 複合機のSMB認証設定 NTLM v1→NTLM v1/v2に変更する","strip":"strip-100-102.webp","indexInStrip":0,"stripCount":3},{"page":101,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 複合機の宛先登録","strip":"strip-100-102.webp","indexInStrip":1,"stripCount":3},{"page":102,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 複合機の宛先登録 事前に確認したホストアドレスを入力","strip":"strip-100-102.webp","indexInStrip":2,"stripCount":3},{"page":103,"category":"各種設定","title":"MAC SMBscan設定","text":"<設定> MAC SMBscan設定 複合機の宛先登録 作成した共有フォルダ名を入力 事前に確認したユーザーIDを入力 お客様に確認したパスワードを入力 登録をクリックで完了","strip":"strip-103-105.webp","indexInStrip":0,"stripCount":3},{"page":104,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのダウンロード","strip":"strip-103-105.webp","indexInStrip":1,"stripCount":3},{"page":105,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのダウンロード 対象機種を選ぶ","strip":"strip-103-105.webp","indexInStrip":2,"stripCount":3},{"page":106,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのダウンロード OSを確認する","strip":"strip-106-108.webp","indexInStrip":0,"stripCount":3},{"page":107,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのダウンロード","strip":"strip-106-108.webp","indexInStrip":1,"stripCount":3},{"page":108,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのインストール > ·","strip":"strip-106-108.webp","indexInStrip":2,"stripCount":3},{"page":109,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのインストール","strip":"strip-109-111.webp","indexInStrip":0,"stripCount":3},{"page":110,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのインストール","strip":"strip-109-111.webp","indexInStrip":1,"stripCount":3},{"page":111,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのインストール お客様にパスワードを確認する -","strip":"strip-109-111.webp","indexInStrip":2,"stripCount":3},{"page":112,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタドライバーのインストール","strip":"strip-112-114.webp","indexInStrip":0,"stripCount":3},{"page":113,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタの追加 リンゴマーク→システム環境設定 +をクリック","strip":"strip-112-114.webp","indexInStrip":1,"stripCount":3},{"page":114,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタの追加 複合機のIPアドレスを入力 IPPを選択 ソフトウェアを選択を選ぶ インストールする機種のドライバーを選ぶ","strip":"strip-112-114.webp","indexInStrip":2,"stripCount":3},{"page":115,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタの追加 追加をクリック オプションを選択 OKで完了","strip":"strip-115-117.webp","indexInStrip":0,"stripCount":3},{"page":116,"category":"各種設定","title":"MAC プリンタ設定","text":"<設定> MAC プリンタ設定 プリンタの削除方法 -をクリック プリンタを削除 削除したいプリンタを選ぶ","strip":"strip-115-117.webp","indexInStrip":1,"stripCount":3},{"page":117,"category":"プリンタ","title":"ホームフォルダにscanのフォルダを作成する方法","text":"ホームフォルダにscanのフォルダを作成する方法 Finderから Machintosh HDを開く Mac OS 13 (Ventura以降）の SMB共有設定。プリンタ設定追加⽅法 IGなどサーバー接続のショートカット作成⽅法 ユーザー","strip":"strip-115-117.webp","indexInStrip":2,"stripCount":3},{"page":118,"category":"プリンタ","title":"ホームフォルダを開く","text":"ホームフォルダを開く ホームフォルダに scan⽤の任意のフォルダ作成 ファイルから新規フォルダ","strip":"strip-118-120.webp","indexInStrip":0,"stripCount":3},{"page":119,"category":"プリンタ","title":"作成したフォルダの共有設定","text":"作成したフォルダの共有設定 作成したフォルダの情報を⾒る ⇩ Control押しながらクリックする もしくはノートなら２本指でクリック アクセス権の変更をする 読み/書き 以上で共有フォルダの作成はできます。 次にユーザー名、NetBios名、windowsファイル共有の設定です","strip":"strip-118-120.webp","indexInStrip":1,"stripCount":3},{"page":120,"category":"プリンタ","title":"Macのユーザー名,Net BIOS名,windowsファイル共有","text":"Macのユーザー名,Net BIOS名,windowsファイル共有 を確認する⽅法 システム設定のユーザーとグループから 管理者を Control 押しながら クリックで詳細オプションを開く ノートパソコンなら２本指でクリックすると表⽰され ます。","strip":"strip-118-120.webp","indexInStrip":2,"stripCount":3},{"page":121,"category":"プリンタ","title":"システム設定から","text":"システム設定から ネットワークから詳細 Net Bios名 ユーザー名 次にNet Bios名","strip":"strip-121-123.webp","indexInStrip":0,"stripCount":3},{"page":122,"category":"プリンタ","title":"次にWindowsファイル共有設定","text":"次にWindowsファイル共有設定 ホスト名 Net Bios名 ファイルパス ホームフォルダ名＼scan ユーザー名 ユーザー名 パスワード mac起動時のパスワード システム設定→⼀般→共有 ＼（バックスラッシュ）の⼊⼒は はoption+¥です 共有設定ON SMB宛先⼊⼒⽅法 （複合機で直接⼊⼒時）","strip":"strip-121-123.webp","indexInStrip":1,"stripCount":3},{"page":123,"category":"プリンタ","title":"プリンタードライバー追加⽅法","text":"プリンタードライバー追加⽅法 ① ⑤カスタマイズでデフォルト設定可能 ④ ③ ② ⑥⽬的の設定にチェックする","strip":"strip-121-123.webp","indexInStrip":2,"stripCount":3},{"page":124,"category":"プリンタ","title":"⑥デフォルト⽚⾯の場合","text":"⑥デフォルト⽚⾯の場合 ⑨印刷ポート選ぶ デフォルトはBonjour IPならIPPでIPアドレス⼊⼒ ⑧システム設定 プリンタとスキャナ→右下の追加 ⑦パスワード⼊⼒ インストールする ⑩ 名前 bizhub C250iなど で分かりやすい名前に 変更可能","strip":"strip-124-126.webp","indexInStrip":0,"stripCount":3},{"page":125,"category":"プリンタ","title":"11","text":"11 ソフトウェアを選択 12 ⽬的の機種のドライバーを選択 13 オプションを選択","strip":"strip-124-126.webp","indexInStrip":1,"stripCount":3},{"page":126,"category":"プリンタ","title":"Mac OSでIGなどサーバーへ接続","text":"Mac OSでIGなどサーバーへ接続 エイリアス作成⽅法 Finderの設定で 接続中のサーバーに チェックを⼊れる","strip":"strip-124-126.webp","indexInStrip":2,"stripCount":3},{"page":127,"category":"プリンタ","title":"smb://192.168.***.***","text":"smb://192.168.***.*** 接続先のIPを⼊⼒ 接続できます。 （登録ユーザー、ゲストで を聞いてきたら使⽤する ユーザー名を⼊⼒） 移動から サーバーへ接続","strip":"strip-127-129.webp","indexInStrip":0,"stripCount":3},{"page":128,"category":"プリンタ","title":"フォルダの設定を開く","text":"フォルダの設定を開く Control+クリック もしくは２本指でタップ デスクトップ上に アイコンができます。 この状態だと 再起動すると消えるので 使⽤するフォルダを 選ぶ→OK エイリアス作成","strip":"strip-127-129.webp","indexInStrip":1,"stripCount":3},{"page":129,"category":"プリンタ","title":"次回からエイリアスで","text":"次回からエイリアスで 開くことが可能です これで電源切っても サーバーは消えません。","strip":"strip-127-129.webp","indexInStrip":2,"stripCount":3}];
+const el = id => document.getElementById(id);
+const q=el("q"), chips=el("chips"), results=el("results"), listbox=el("listbox"),
+      viewer=el("viewer"), img=el("pageImage");
+let cat="すべて", cur=1;
+const cats=["すべて",...new Set(P.map(p=>p.category))];
+
+function norm(v){
+  return String(v??"").normalize("NFKC").toLowerCase()
+    .replace(/[‐‑‒–—―]/g,"-").replace(/\s+/g," ").trim();
+}
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function makeChips(){
+  chips.replaceChildren();
+  for(const c of cats){
+    const b=document.createElement("button");
+    b.type="button"; b.className="chip"+(c===cat?" active":""); b.textContent=c;
+    b.onclick=()=>{cat=c; makeChips(); render();};
+    chips.appendChild(b);
+  }
+}
+function render(){
+  const raw=q.value || "";
+  const tokens=norm(raw).split(" ").filter(Boolean);
+  const arr=P.filter(p=>{
+    if(cat!=="すべて" && p.category!==cat) return false;
+    if(!tokens.length) return true;
+    const hay=norm(`${p.category} ${p.title} ${p.text}`);
+    return tokens.every(t=>hay.includes(t));
+  });
+  el("heading").textContent=raw.trim()?`「${raw.trim()}」の検索結果`:(cat==="すべて"?"目次":cat);
+  el("count").textContent=`${arr.length}件`;
+  results.replaceChildren();
+  if(!arr.length){
+    const d=document.createElement("div");
+    d.style.cssText="padding:24px;text-align:center;color:#91a5bc";
+    d.textContent="該当するページがありません";
+    results.appendChild(d);
+    return;
+  }
+  const frag=document.createDocumentFragment();
+  for(const p of arr){
+    const b=document.createElement("button");
+    b.type="button"; b.className="item";
+    b.innerHTML=`<span class="top"><span class="badge">${esc(p.category)}</span><span class="ptitle">${esc(p.title)}</span><span class="pg">P.${p.page}</span></span><span class="desc">${esc(p.text.slice(0,150))}</span>`;
+    b.onclick=()=>openPage(p.page);
+    frag.appendChild(b);
+  }
+  results.appendChild(frag);
+}
+function positionPage(p){
+  // Every strip holds up to 3 pages, each with the same 910x1287 ratio.
+  img.style.transform=`translateY(-${p.indexInStrip * (100 / p.stripCount)}%)`;
+}
+function openPage(n){
+  cur=Math.max(1,Math.min(P.length,Number(n)||1));
+  const p=P[cur-1];
+  el("title").textContent=`${p.category}｜${p.title}`;
+  el("num").textContent=`${cur} / ${P.length}`;
+  el("prev").disabled=cur<=1; el("next").disabled=cur>=P.length;
+
+  if(img.dataset.src!==p.strip){
+    img.onload=()=>{positionPage(p); img.onload=null;};
+    img.src=p.strip;
+    img.dataset.src=p.strip;
+  } else {
+    positionPage(p);
+  }
+  listbox.classList.add("hidden");
+  viewer.classList.remove("hidden");
+  window.scrollTo(0,0);
+  history.replaceState(null,"",`#p=${cur}`);
+}
+function showList(){
+  viewer.classList.add("hidden");
+  listbox.classList.remove("hidden");
+  history.replaceState(null,"",location.pathname+location.search);
+  window.scrollTo(0,0);
+}
+
+/* iPhone/Safari: listen to several events so the search always updates. */
+["input","change","keyup","paste","compositionend"].forEach(ev=>q.addEventListener(ev,()=>{
+  if(ev==="paste") setTimeout(render,0); else render();
+}));
+q.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); render(); q.blur(); } });
+el("clear").onclick=()=>{q.value=""; render(); q.focus();};
+el("back").onclick=showList;
+el("toc").onclick=()=>{cat="すべて";q.value="";makeChips();render();showList();};
+el("home").onclick=el("toc").onclick;
+el("prev").onclick=()=>openPage(cur-1);
+el("next").onclick=()=>openPage(cur+1);
+
+makeChips(); render();
+const hash=location.hash.match(/p=(\d+)/); if(hash) openPage(Number(hash[1]));
+</script>
+</body>
+</html>
